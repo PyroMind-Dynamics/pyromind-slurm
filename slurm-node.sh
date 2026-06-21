@@ -1,5 +1,14 @@
 #!/bin/bash
 
+
+## 四个参数 必须设置
+PKG_ROOT_PATH="/root/slurm"
+SLURM_DATA_STORE_BASE="/root/slurm_data"
+MASTER_POD_ID="ee3a4ed8314f"
+CONTROL_MACHINE="192.168.57.189"
+
+
+
 echo "=========================================="
 echo "Slurm Configuration Generator"
 echo "=========================================="
@@ -9,20 +18,12 @@ pkill munged
 HOST=$(hostname)
 echo "Detected hostname: ${HOST}"
 
-## 四个参数 必须设置
-MASTER_POD_ID="ee3a4ed8314f"
-CONTROL_MACHINE="192.168.57.189"
-
-
-PKG_ROOT_PATH="/root/slurm"
-SLURM_BASE_DATA_DIR="/root/slurm_data/${HOST}"
-
 
 export PATH=/usr/local/nvidia/bin:$PATH
 export LD_LIBRARY_PATH=/usr/local/nvidia/lib64:$LD_LIBRARY_PATH
 
 CLUSTER_NAME="jupyter-deployment-${MASTER_POD_ID}-0"
-
+SLURM_BASE_DATA_DIR="${SLURM_DATA_STORE_BASE}/${HOST}"
 PKG_ROOT_PATH_BASE=$PKG_ROOT_PATH/base
 PKG_ROOT_PATH_SLURM=$PKG_ROOT_PATH/slurm
 

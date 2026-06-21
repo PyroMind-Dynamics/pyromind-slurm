@@ -1,5 +1,11 @@
 #!/bin/bash
 
+
+
+#### 需要修改地方
+PKG_ROOT_PATH="/root/pyromind-slurm"
+SLURM_DATA_STORE_BASE="/root/slurm_data"
+
 echo "=========================================="
 echo "Slurm Configuration Generator"
 echo "=========================================="
@@ -15,11 +21,9 @@ pkill mysqld
 HOST=$(hostname)
 echo "Detected hostname: ${HOST}"
 
-PKG_ROOT_PATH="/root/slurm"
 PKG_ROOT_PATH_BASE=$PKG_ROOT_PATH/base
 PKG_ROOT_PATH_SLURM=$PKG_ROOT_PATH/slurm
-
-SLURM_BASE_DATA_DIR="/root/slurm_data/${HOST}"
+SLURM_BASE_DATA_DIR="${SLURM_DATA_STORE_BASE}/${HOST}"
 MYSQL_DATA_DIR="${SLURM_BASE_DATA_DIR}/mysql/data"
 
 # apt update
