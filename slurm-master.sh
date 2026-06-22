@@ -35,7 +35,13 @@ echo "请保存此密码！"
 export PATH=/usr/local/nvidia/bin:$PATH
 export LD_LIBRARY_PATH=/usr/local/nvidia/lib64:$LD_LIBRARY_PATH
 
-cd $PKG_ROOT_PATH_BASE  && dpkg --configure -a &&  apt-get install -f -y  && dpkg -i libsigsegv2_*.deb && dpkg -i gawk_*.deb && dpkg -i *.deb && apt-get install -f -y
+cd $PKG_ROOT_PATH_BASE  && dpkg --configure -a &&  apt-get install -f -y  && dpkg -i libsigsegv2_*.deb && dpkg -i gawk_*.deb && dpkg -i *.deb && apt-get install -f -y 
+cd $PKG_ROOT_PATH_BASE && dpkg -i mariadb-server-10.6_1%3a10.6.23-0ubuntu0.22.04.1_amd64.deb \
+    mariadb-server_1%3a10.6.23-0ubuntu0.22.04.1_all.deb && dpkg -i mailcap_3.70+nmu1ubuntu1_all.deb \
+    mariadb-common_1%3a10.6.23-0ubuntu0.22.04.1_all.deb \
+    mariadb-client-core-10.6_1%3a10.6.23-0ubuntu0.22.04.1_amd64.deb \
+    mariadb-client-10.6_1%3a10.6.23-0ubuntu0.22.04.1_amd64.deb \
+    mariadb-server-core-10.6_1%3a10.6.23-0ubuntu0.22.04.1_amd64.deb
 
 
 if [ -z "$(ls -A $MYSQL_DATA_DIR 2>/dev/null)" ]; then
@@ -65,8 +71,8 @@ fi
 
 # 定义目录列表（使用 | 作为分隔符，避免与路径冲突）
 directories="${SLURM_BASE_DATA_DIR}/munge:root:root:755|\
-${SLURM_BASE_DATA_DIR}/slurmd/spool:root:root:755|\
-${SLURM_BASE_DATA_DIR}/slurm/spool:root:root:755|\
+${SLURM_BASE_DATA_DIR}/slurmctld:root:root:755|\
+${SLURM_BASE_DATA_DIR}/slurmdbd:root:root:755|\
 ${SLURM_BASE_DATA_DIR}/slurm/run:root:root:755|\
 ${SLURM_BASE_DATA_DIR}/slurm/log:root:root:755|\
 ${SLURM_BASE_DATA_DIR}/slurm/data:root:root:755|\
@@ -134,12 +140,12 @@ ControlMachine=${HOST}
 SlurmUser=root
 AuthType=auth/munge
 
-StateSaveLocation=${SLURM_BASE_DATA_DIR}/slurm/spool/slurmctld
-SlurmdSpoolDir=${SLURM_BASE_DATA_DIR}/slurm/spool/slurmd
+StateSaveLocation=${SLURM_BASE_DATA_DIR}/slurmctld
+SlurmdSpoolDir=${SLURM_BASE_DATA_DIR}/slurmctld
 
-SlurmctldPidFile=${SLURM_BASE_DATA_DIR}/slurm/run/slurmctld.pid
-SlurmctldLogFile=${SLURM_BASE_DATA_DIR}/slurm/log/slurmctld.log
-SlurmdLogFile=${SLURM_BASE_DATA_DIR}/slurm/log/slurmd.log
+SlurmctldPidFile=${SLURM_BASE_DATA_DIR}/slurmctld/slurmctld.pid
+SlurmctldLogFile=${SLURM_BASE_DATA_DIR}/slurmctld/slurmctld.log
+SlurmdLogFile=${SLURM_BASE_DATA_DIR}/slurmctld/slurmd.log
 
 SchedulerType=sched/backfill
 SelectType=select/cons_tres
@@ -172,8 +178,8 @@ echo "✅ slurm.conf generated!"
 # 生成 slurmdbd.conf
 cat > /etc/slurm/slurmdbd.conf << EOF
 AuthType=auth/munge
-LogFile=${SLURM_BASE_DATA_DIR}/slurm/log/slurm/slurmdbd.log
-PidFile=${SLURM_BASE_DATA_DIR}/slurm/run/slurmdbd.pid
+LogFile=${SLURM_BASE_DATA_DIR}/slurmdbd/slurmdbd.log
+PidFile=${SLURM_BASE_DATA_DIR}/slurmdbd/slurmdbd.pid
 StorageType=accounting_storage/mysql
 StorageHost=127.0.0.1
 StoragePort=3306

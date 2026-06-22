@@ -2,10 +2,10 @@
 
 
 ## 四个参数 必须设置
-PKG_ROOT_PATH="/root/slurm"
+PKG_ROOT_PATH="/root/pyromind-slurm"
 SLURM_DATA_STORE_BASE="/root/slurm_data"
 MASTER_POD_ID="ee3a4ed8314f"
-CONTROL_MACHINE="192.168.57.189"
+CONTROL_MACHINE="192.168.62.26"
 
 
 
@@ -123,7 +123,7 @@ AuthType=auth/munge
 ProctrackType=proctrack/linuxproc
 TaskPlugin=task/none
 
-SlurmdSpoolDir=${SLURM_BASE_DATA_DIR}/slurmd/spool
+SlurmdSpoolDir=${SLURM_BASE_DATA_DIR}
 SlurmdLogFile=${SLURM_BASE_DATA_DIR}/slurmd.log
 
 SlurmdPort=6818
