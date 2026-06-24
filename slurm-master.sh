@@ -224,7 +224,8 @@ slurmctld
 sleep  5
 
 echo "✅ Slurm services started successfully!"
-if [ ! -f SLURM_BASE_DATA_DIR/start.sh ]; then
-    cp slurm-master.sh SLURM_BASE_DATA_DIR/start.sh
-    chmod +x SLURM_BASE_DATA_DIR/start.sh
+if [ ! -f $SLURM_BASE_DATA_DIR/start.sh ]; then
+    cd $PKG_ROOT_PATH
+    cp slurm-master.sh $SLURM_BASE_DATA_DIR/start.sh
+    chmod +x $SLURM_BASE_DATA_DIR/start.sh
 fi

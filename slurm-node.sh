@@ -224,6 +224,20 @@ EOF
 # ============================================
 # 获取 CPU Limit
 # ============================================
+# if [ -f "/sys/fs/cgroup/cpu.max" ]; then
+#     QUOTA=$(awk '{print $1}' /sys/fs/cgroup/cpu.max)
+#     PERIOD=$(awk '{print $2}' /sys/fs/cgroup/cpu.max)
+    
+#     if [ "$QUOTA" != "max" ] && [ -n "$PERIOD" ] && [ "$PERIOD" -gt 0 ]; then
+#         CPUS=$((QUOTA / PERIOD))
+#         [ "$CPUS" -lt 1 ] && CPUS=1
+#     else
+#         CPUS=$(nproc)
+#     fi
+# else
+#     CPUS=$(nproc)
+# fi
+
 if [ -f "/sys/fs/cgroup/cpu.max" ]; then
     QUOTA=$(awk '{print $1}' /sys/fs/cgroup/cpu.max)
     PERIOD=$(awk '{print $2}' /sys/fs/cgroup/cpu.max)
@@ -235,8 +249,30 @@ if [ -f "/sys/fs/cgroup/cpu.max" ]; then
         CPUS=$(nproc)
     fi
 else
-    CPUS=$(nproc)
+    CGROUP_PATH=$(cat /proc/self/cgroup 2>/dev/null | cut -d: -f3)
+    if [ -n "$CGROUP_PATH" ]; then
+        CGROUP_PATH=$(echo "$CGROUP_PATH" | sed 's/^[0-9]*::\?//')
+        CPU_MAX_FILE="/sys/fs/cgroup${CGROUP_PATH}/cpu.max"
+        
+        if [ -f "$CPU_MAX_FILE" ]; then
+            QUOTA=$(awk '{print $1}' "$CPU_MAX_FILE")
+            PERIOD=$(awk '{print $2}' "$CPU_MAX_FILE")
+            
+            if [ "$QUOTA" != "max" ] && [ -n "$PERIOD" ] && [ "$PERIOD" -gt 0 ]; then
+                CPUS=$((QUOTA / PERIOD))
+                [ "$CPUS" -lt 1 ] && CPUS=1
+            else
+                CPUS=$(nproc)
+            fi
+        else
+            CPUS=$(nproc)
+        fi
+    else
+        CPUS=$(nproc)
+    fi
 fi
+
+echo "CPU Limit: $CPUS cores"
 
 # ============================================
 # 获取 Memory Limit
@@ -281,7 +317,10 @@ START_CMD="slurmd -Z --conf \"CPUs=${CPUS} RealMemory=${REAL_MEMORY}${GPU_CONF}\
 echo "$START_CMD"
 eval "$START_CMD"
 
-if [ ! -f SLURM_BASE_DATA_DIR/start.sh ]; then
-    cp slurm-master.sh SLURM_BASE_DATA_DIR/start.sh
-    chmod +x SLURM_BASE_DATA_DIR/start.sh
+echo "init start: "
+if [ ! -f $SLURM_BASE_DATA_DIR/start.sh ]; then
+    cd $PKG_ROOT_PATH
+    ls -ltr .
+    cp slurm-node.sh $SLURM_BASE_DATA_DIR/start.sh
+    chmod +x $SLURM_BASE_DATA_DIR/start.sh
 fi
