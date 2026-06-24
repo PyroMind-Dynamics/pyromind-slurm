@@ -23,6 +23,8 @@ echo "Detected hostname: ${HOST}"
 
 PKG_ROOT_PATH_BASE=$PKG_ROOT_PATH/base
 PKG_ROOT_PATH_SLURM=$PKG_ROOT_PATH/slurm
+PKG_ROOT_PATH_ENROOT=$PKG_ROOT_PATH/enroot
+
 SLURM_BASE_DATA_DIR="${SLURM_DATA_STORE_BASE}/${HOST}"
 MYSQL_DATA_DIR="${SLURM_BASE_DATA_DIR}/mysql/data"
 
@@ -137,6 +139,10 @@ cat > /etc/slurm/slurm.conf << SLURM_EOF
 ClusterName=${HOST}
 ControlMachine=${HOST}
 
+PlugStackConfig=/etc/slurm/plugstack.conf
+SlurmctldParameters=cloud_dns,allow_node_resume
+
+
 SlurmUser=root
 AuthType=auth/munge
 
@@ -200,6 +206,17 @@ cat > /etc/slurm/cgroup.conf << 'EOF'
 CgroupPlugin=disabled
 EOF
 
+cat > /etc/slurm/plugstack.conf << 'EOF'
+include /etc/slurm/plugstack.conf.d/*
+EOF
+
+## 安装enroot ln -s /usr/share/pyxis/pyxis.conf /etc/slurm/plugstack.conf.d/pyxis.conf
+cd $PKG_ROOT_PATH_ENROOT &&  dpkg --configure -a   &&  dpkg -i *.deb &&  apt-get install -f -y
+ln -s /usr/share/pyxis/pyxis.conf /etc/slurm/plugstack.conf.d/pyxis.conf
+if [ ! -f /etc/slurm/plugstack.conf.d/pyxis.conf ] && [ ! -L /etc/slurm/plugstack.conf.d/pyxis.conf ]; then
+    mkdir -p /etc/slurm/plugstack.conf.d && ln -s /usr/share/pyxis/pyxis.conf /etc/slurm/plugstack.conf.d/pyxis.conf
+fi
+
 slurmdbd
 sleep 5
 
@@ -207,4 +224,7 @@ slurmctld
 sleep  5
 
 echo "✅ Slurm services started successfully!"
-
+if [ ! -f SLURM_BASE_DATA_DIR/start.sh ]; then
+    cp slurm-master.sh SLURM_BASE_DATA_DIR/start.sh
+    chmod +x SLURM_BASE_DATA_DIR/start.sh
+fi

@@ -4,9 +4,8 @@
 ## 四个参数 必须设置
 PKG_ROOT_PATH="/root/pyromind-slurm"
 SLURM_DATA_STORE_BASE="/root/slurm_data"
-MASTER_POD_ID="ee3a4ed8314f"
-CONTROL_MACHINE="192.168.62.26"
-
+MASTER_POD_ID="8e22c24f9dd4"
+CONTROL_MACHINE="jupyter-headless-8e22c24f9dd4.custom-user-1000056326"
 
 
 echo "=========================================="
@@ -26,9 +25,16 @@ CLUSTER_NAME="jupyter-deployment-${MASTER_POD_ID}-0"
 SLURM_BASE_DATA_DIR="${SLURM_DATA_STORE_BASE}/${HOST}"
 PKG_ROOT_PATH_BASE=$PKG_ROOT_PATH/base
 PKG_ROOT_PATH_SLURM=$PKG_ROOT_PATH/slurm
+PKG_ROOT_PATH_ENROOT=$PKG_ROOT_PATH/enroot
+
+
+if [ ! -f "${SLURM_BASE_DATA_DIR}/munge/munge.key" ]; then
+    echo "错误: 请先配置 munge.key 文件 (${SLURM_BASE_DATA_DIR}/munge/munge.key)"
+    exit 1
+fi
+
 
 cd $PKG_ROOT_PATH_BASE && dpkg -i libsigsegv2_*.deb && dpkg -i gawk_*.deb && dpkg -i *.deb && apt-get install -f -y 
-
 
 # 定义目录列表（使用 | 作为分隔符，避免与路径冲突）
 directories="${SLURM_BASE_DATA_DIR}/munge:root:root:755|\
@@ -89,6 +95,8 @@ else
 fi
 
 cd $PKG_ROOT_PATH_SLURM && dpkg -i *.deb && dpkg --configure -a   &&  dpkg -i *.deb &&  apt-get install -f -y
+# cd $PKG_ROOT_PATH_SLURM && dpkg --configure -a   &&  dpkg -i *.deb &&  apt-get install -f -y
+
 
 SLURMD_INFO=$(slurmd -C 2>/dev/null)
 if [ -z "$SLURMD_INFO" ]; then
@@ -116,6 +124,9 @@ echo "从 slurmd -C 获取: CPUs=${CPUS}, RealMemory=${REAL_MEMORY} MB"
 cat > /etc/slurm/slurm.conf << SLURM_EOF
 ClusterName=${CLUSTER_NAME}
 ControlMachine=${CONTROL_MACHINE}
+
+PlugStackConfig=/etc/slurm/plugstack.conf
+SlurmctldParameters=cloud_dns,allow_node_resume
 
 SlurmUser=root
 AuthType=auth/munge
@@ -205,6 +216,10 @@ cat > /etc/slurm/cgroup.conf << 'EOF'
 CgroupPlugin=disabled
 EOF
 
+cat > /etc/slurm/plugstack.conf << 'EOF'
+include /etc/slurm/plugstack.conf.d/*
+EOF
+
 # 从 cgroup v2 获取 CPU 和内存 Limit，生成启动命令
 # ============================================
 # 获取 CPU Limit
@@ -250,9 +265,24 @@ if command -v nvidia-smi &> /dev/null && nvidia-smi -L &> /dev/null; then
     fi
 fi
 
+
+## 安装enroot ln -s /usr/share/pyxis/pyxis.conf /etc/slurm/plugstack.conf.d/pyxis.conf
+echo "begin install $PKG_ROOT_PATH_ENROOT "
+cd $PKG_ROOT_PATH_ENROOT &&  dpkg -i *.deb &&  apt-get install -f -y
+ln -s /usr/share/pyxis/pyxis.conf /etc/slurm/plugstack.conf.d/pyxis.conf
+if [ ! -f /etc/slurm/plugstack.conf.d/pyxis.conf ] && [ ! -L /etc/slurm/plugstack.conf.d/pyxis.conf ]; then
+    mkdir -p /etc/slurm/plugstack.conf.d && ln -s /usr/share/pyxis/pyxis.conf /etc/slurm/plugstack.conf.d/pyxis.conf
+fi
+
 # ============================================
 # 输出启动命令（只 echo，不执行）
 # ============================================
 START_CMD="slurmd -Z --conf \"CPUs=${CPUS} RealMemory=${REAL_MEMORY}${GPU_CONF}\""
 echo "$START_CMD"
 eval "$START_CMD"
+
+
+if [ ! -f SLURM_BASE_DATA_DIR/start.sh ]; then
+    cp slurm-node.sh SLURM_BASE_DATA_DIR/start.sh
+    chmod +x SLURM_BASE_DATA_DIR/start.sh
+fi
