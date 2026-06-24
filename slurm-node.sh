@@ -281,8 +281,7 @@ START_CMD="slurmd -Z --conf \"CPUs=${CPUS} RealMemory=${REAL_MEMORY}${GPU_CONF}\
 echo "$START_CMD"
 eval "$START_CMD"
 
-
 if [ ! -f SLURM_BASE_DATA_DIR/start.sh ]; then
-    cp slurm-node.sh SLURM_BASE_DATA_DIR/start.sh
+    cp slurm-master.sh SLURM_BASE_DATA_DIR/start.sh
     chmod +x SLURM_BASE_DATA_DIR/start.sh
 fi
