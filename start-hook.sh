@@ -3,7 +3,7 @@
 
 if [ -f "/root/slurm_data/${HOSTNAME}/start.sh" ]; then
     nohup sh /root/slurm_data/${HOSTNAME}/start.sh &
-    echo "run ${HOSTNAME}" >> /root/login.txt
+    echo "run ${HOSTNAME}"
 else
-    echo "pass ${HOSTNAME}" >> /root/login.txt
+    echo "pass ${HOSTNAME}"
 fi
