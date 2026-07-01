@@ -145,6 +145,7 @@ SlurmctldParameters=cloud_dns,allow_node_resume
 
 SlurmUser=root
 AuthType=auth/munge
+DebugFlags=NO_CONF_HASH
 
 StateSaveLocation=${SLURM_BASE_DATA_DIR}/slurmctld
 SlurmdSpoolDir=${SLURM_BASE_DATA_DIR}/slurmctld

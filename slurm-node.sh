@@ -324,3 +324,8 @@ if [ ! -f $SLURM_BASE_DATA_DIR/start.sh ]; then
     cp slurm-node.sh $SLURM_BASE_DATA_DIR/start.sh
     chmod +x $SLURM_BASE_DATA_DIR/start.sh
 fi
+
+sleep 5
+## scontrol update nodename=jupyter-deployment-f3518c9f0425-0 state=resume
+scontrol update nodename=${HOST} state=resume
+echo "resume ${HOST} success"
